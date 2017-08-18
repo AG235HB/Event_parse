@@ -13,15 +13,7 @@ namespace Event_parse
             _values.Add(key, value);
         }
 
-        public void PrintValues()
-        {
-            IDictionaryEnumerator enumerator = _values.GetEnumerator();
-
-            while (enumerator.MoveNext())
-                Console.WriteLine(enumerator.Key.ToString().PadRight(15) + enumerator.Value);
-        }
-
-        public void WriteValues(ref StreamWriter sw)
+        public void WriteValues(StreamWriter sw)
         {
             IDictionaryEnumerator enumerator = _values.GetEnumerator();
 

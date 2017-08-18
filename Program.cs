@@ -28,7 +28,7 @@ namespace Event_parse
                 XmlNode root = _config.FirstChild;
                 if (root.HasChildNodes)
                     for (int i = 0; i < root.ChildNodes.Count; i++)
-                        ReadConfig(root.ChildNodes[i], ref _Xpressions, ref outPath);
+                        ReadConfig(root.ChildNodes[i], _Xpressions, outPath);
 
                 //вывод регулярных выражений на экран
                 foreach (Expression expr in _Xpressions)
@@ -45,7 +45,7 @@ namespace Event_parse
                         Event _event = new Event();
 
                         foreach (Expression expr in _Xpressions)
-                            RunExpressions(expr, ref _event, ref readerString);
+                            RunExpressions(expr, _event, readerString);
                         _events.Add(_event);
                     }
 
@@ -55,7 +55,7 @@ namespace Event_parse
                         foreach(Event evnt in _events)
                         {
                             writer.WriteLine("Event :");
-                            evnt.WriteValues(ref writer);
+                            evnt.WriteValues(writer);
                         }
                         writer.Flush();
                     }
@@ -65,7 +65,7 @@ namespace Event_parse
                         string line = String.Empty;
 
                         //заголовки для таблицы
-                        WriteHeaders(ref line, _Xpressions);
+                        WriteHeaders(line, _Xpressions);
 
                         outData.AppendLine(line);
                         line = String.Empty;
@@ -74,7 +74,7 @@ namespace Event_parse
                         foreach (Event evnt in _events)
                         {
                             line = String.Empty;
-                            WriteEvents(evnt, _Xpressions, ref line, ref outData);
+                            WriteEvents(evnt, _Xpressions, line, outData);
                             outData.AppendLine(line);
                         }
 
@@ -91,7 +91,7 @@ namespace Event_parse
             Console.Read();
         }
 
-        static private void ReadConfig(XmlNode node, ref List<Expression> expressions, ref string path)
+        static private void ReadConfig(XmlNode node, List<Expression> expressions, string path)
         {
             if ((node.ParentNode.Name == "expressions")||(node.ParentNode.Name=="regex"))
             {
@@ -121,10 +121,10 @@ namespace Event_parse
 
             if (node.HasChildNodes)
                 for (int i = 0; i < node.ChildNodes.Count; i++)
-                    ReadConfig(node.ChildNodes[i], ref expressions, ref path);
+                    ReadConfig(node.ChildNodes[i], expressions, path);
         }
 
-        static private void RunExpressions(Expression expr, ref Event evnt, ref string rString)
+        static private void RunExpressions(Expression expr, Event evnt, string rString)
         {
             string pattern = expr.pattern;
             if (Regex.IsMatch(rString, pattern))
@@ -134,7 +134,7 @@ namespace Event_parse
 
                 if (expr.HasChildren())
                     foreach (Expression chExpr in expr.children)
-                        RunExpressions(chExpr, ref evnt, ref rString);
+                        RunExpressions(chExpr, evnt, rString);
 
                 if (Regex.Match(rString, pattern).Length != rString.Length)
                     rString = rString.Remove(0, Regex.Match(rString, pattern).Length);
@@ -143,7 +143,7 @@ namespace Event_parse
             }
         }
 
-        static private void WriteHeaders(ref string line, List<Expression> expressions)
+        static private void WriteHeaders(string line, List<Expression> expressions)
         {
             foreach (Expression expr in expressions)
             {
@@ -151,7 +151,7 @@ namespace Event_parse
                 {
                     line += expr.name + ";";
                     if (expr.HasChildren())
-                        WriteHeaders(ref line, expr.children);
+                        WriteHeaders(line, expr.children);
                 }
                 else
                 {
@@ -159,13 +159,13 @@ namespace Event_parse
                     if (expr.HasChildren())
                     {
                         line += ";";
-                        WriteHeaders(ref line, expr.children);
+                        WriteHeaders(line, expr.children);
                     }
                 }
             }
         }
 
-        static private void WriteEvents(Event evnt, List<Expression> expressions, ref string line, ref StringBuilder outData)
+        static private void WriteEvents(Event evnt, List<Expression> expressions, string line, StringBuilder outData)
         {
             foreach (Expression expr in expressions)
                 if (evnt._values[expr.name] != null)
@@ -173,7 +173,7 @@ namespace Event_parse
                     {
                         line += evnt._values[expr.name] + ";";
                         if (expr.HasChildren())
-                            WriteEvents(evnt, expr.children, ref line, ref outData);
+                            WriteEvents(evnt, expr.children, line, outData);
                     }
                     else
                     {
@@ -181,7 +181,7 @@ namespace Event_parse
                         if (expr.HasChildren())
                         {
                             line += ";";
-                            WriteEvents(evnt, expr.children, ref line, ref outData);
+                            WriteEvents(evnt, expr.children, line, outData);
                         }
                     }
                 else
@@ -189,7 +189,7 @@ namespace Event_parse
             
         }
 
-        static private List<Expression> GetExpressions(List<Expression> expressions, ref XmlReader reader)
+        static private List<Expression> GetExpressions(List<Expression> expressions, XmlReader reader)
         {
             string regexField = String.Empty;
 
@@ -208,7 +208,7 @@ namespace Event_parse
                                 if (reader.Name.Equals("name") || reader.Name.Equals("pattern"))
                                     regexField = reader.Name;
                                 else if (reader.Name.Equals("regex"))
-                                    expr.children = GetExpressions(expr.children, ref reader);
+                                    expr.children = GetExpressions(expr.children, reader);
                                 continue;
 
                             case XmlNodeType.Text:
